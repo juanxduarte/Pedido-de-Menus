@@ -1417,6 +1417,11 @@
     function toggleAuthMode() {
         document.getElementById('loginForm').classList.toggle('hidden');
         document.getElementById('registerForm').classList.toggle('hidden');
+        
+        // Rellenar sectores cuando se muestra el formulario de registro
+        if (!document.getElementById('registerForm').classList.contains('hidden')) {
+            inicializarFormularios();
+        }
     }
     
     // ===== MENSAJES =====
@@ -1440,31 +1445,46 @@
     
     // ===== INICIALIZAR FORMULARIOS =====
     function inicializarFormularios() {
+        console.log('%c🔧 Intentando llenar dropdown de sectores...', 'color: #667eea; font-weight: bold;');
+        
         // Cargar sectores en el dropdown de registro
         const sectorSelect = document.getElementById('registerSector');
-        if (sectorSelect) {
-            sectorSelect.innerHTML = ''; // Limpiar opciones anteriores
-            
-            // Agregar opción vacía
-            const optDefault = document.createElement('option');
-            optDefault.value = '';
-            optDefault.textContent = '-- Selecciona tu sector --';
-            sectorSelect.appendChild(optDefault);
-            
-            // Agregar cada sector
-            SECTORES.forEach(s => {
-                const opt = document.createElement('option');
-                opt.value = s;
-                opt.textContent = s;
-                sectorSelect.appendChild(opt);
-            });
-            
-            console.log('%c✅ Dropdown de sectores llenado correctamente con %d opciones', 'color: #27ae60; font-weight: bold;', SECTORES.length);
+        
+        if (!sectorSelect) {
+            console.error('%c❌ No se encontró el elemento registerSector', 'color: #e74c3c; font-weight: bold;');
+            return;
         }
+        
+        sectorSelect.innerHTML = ''; // Limpiar opciones anteriores
+        
+        // Agregar opción vacía
+        const optDefault = document.createElement('option');
+        optDefault.value = '';
+        optDefault.textContent = '-- Selecciona tu sector --';
+        sectorSelect.appendChild(optDefault);
+        
+        // Agregar cada sector
+        SECTORES.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s;
+            opt.textContent = s;
+            sectorSelect.appendChild(opt);
+        });
+        
+        console.log('%c✅ Dropdown de sectores llenado correctamente con %d opciones', 'color: #27ae60; font-weight: bold;', SECTORES.length);
+        console.log('%c📋 Sectores:', 'color: #667eea; font-weight: bold;', SECTORES);
     }
     
-    // Inicializar cuando la página carga
-    window.addEventListener('DOMContentLoaded', inicializarFormularios);
+    // Inicializar cuando el documento esté listo
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', inicializarFormularios);
+    } else {
+        // Si el documento ya está cargado
+        inicializarFormularios();
+    }
+    
+    // También ejecutar con un pequeño delay para asegurarse
+    setTimeout(inicializarFormularios, 100);
     
     auth.onAuthStateChanged(user => {
         if (user) {
