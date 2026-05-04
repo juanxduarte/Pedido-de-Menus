@@ -1438,14 +1438,33 @@
     document.getElementById('monthSelect').value = new Date().toISOString().slice(0, 7);
     document.getElementById('menuMonthSelect').value = new Date().toISOString().slice(0, 7);
     
-    // Cargar sectores en el formulario de registro
-    const sectorSelect = document.getElementById('registerSector');
-    SECTORES.forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s;
-        opt.textContent = s;
-        sectorSelect.appendChild(opt);
-    });
+    // ===== INICIALIZAR FORMULARIOS =====
+    function inicializarFormularios() {
+        // Cargar sectores en el dropdown de registro
+        const sectorSelect = document.getElementById('registerSector');
+        if (sectorSelect) {
+            sectorSelect.innerHTML = ''; // Limpiar opciones anteriores
+            
+            // Agregar opción vacía
+            const optDefault = document.createElement('option');
+            optDefault.value = '';
+            optDefault.textContent = '-- Selecciona tu sector --';
+            sectorSelect.appendChild(optDefault);
+            
+            // Agregar cada sector
+            SECTORES.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s;
+                opt.textContent = s;
+                sectorSelect.appendChild(opt);
+            });
+            
+            console.log('%c✅ Dropdown de sectores llenado correctamente con %d opciones', 'color: #27ae60; font-weight: bold;', SECTORES.length);
+        }
+    }
+    
+    // Inicializar cuando la página carga
+    window.addEventListener('DOMContentLoaded', inicializarFormularios);
     
     auth.onAuthStateChanged(user => {
         if (user) {
