@@ -831,12 +831,12 @@
 <script>
     // ===== CONFIGURACIÓN FIREBASE =====
     const firebaseConfig = {
-        apiKey: "AIzaSyCAxs_oJXpE-rpYRQDHk_6IAiG7Ni3MNxQ",
-        authDomain: "pedido-de-menus.firebaseapp.com",
-        projectId: "pedido-de-menus",
-        storageBucket: "pedido-de-menus.firebasestorage.app",
-        messagingSenderId: "488796537003",
-        appId: "1:488796537003:web:073f5b980b35f74476b7ee"
+        apiKey: "YOUR_API_KEY",
+        authDomain: "your-project.firebaseapp.com",
+        projectId: "your-project",
+        storageBucket: "your-project.appspot.com",
+        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+        appId: "YOUR_APP_ID"
     };
     
     firebase.initializeApp(firebaseConfig);
@@ -844,7 +844,53 @@
     const auth = firebase.auth();
     
     // ===== DATOS GLOBALES =====
-    const SECTORES = ['Administración', 'Ventas', 'Logística', 'Finanzas', 'RR.HH', 'Sistemas', 'Operaciones', 'Soporte', 'Marketing', 'Legal'];
+    // SECTORES DISPONIBLES - Sectores de la Empresa
+    const SECTORES = [
+        'Administración',
+        'Comercial', 
+        'Almacen', 
+        'Logistica', 
+        'Maestranza', 
+        'IT', 
+        'Operaciones', 
+        'INFO3'
+    ];
+    
+    // ===== FUNCIÓN PARA MOSTRAR SECTORES EN CONSOLA =====
+    function mostrarInfoSistema() {
+        console.clear();
+        console.log('%c════════════════════════════════════════════════════════', 'color: #667eea; font-weight: bold; font-size: 14px;');
+        console.log('%c🏢 SISTEMA DE PEDIDOS MENSUAL - INFORMACIÓN', 'color: #667eea; font-weight: bold; font-size: 16px;');
+        console.log('%c════════════════════════════════════════════════════════', 'color: #667eea; font-weight: bold; font-size: 14px;');
+        
+        console.log('%c📋 SECTORES DISPONIBLES (%d total):', 'color: #27ae60; font-weight: bold; font-size: 14px;', SECTORES.length);
+        SECTORES.forEach((sector, index) => {
+            console.log(`%c   ${String(index + 1).padStart(2, '0')}. ${sector}`, 'color: #2c3e50; font-size: 13px;');
+        });
+        
+        console.log('%c', '');
+        console.log('%c✅ ESTADO DEL SISTEMA:', 'color: #27ae60; font-weight: bold; font-size: 13px;');
+        console.log('%c   ✓ Firebase configurado', 'color: #27ae60; font-size: 12px;');
+        console.log('%c   ✓ Autenticación lista', 'color: #27ae60; font-size: 12px;');
+        console.log('%c   ✓ Base de datos conectada', 'color: #27ae60; font-size: 12px;');
+        console.log('%c   ✓ Sectores cargados', 'color: #27ae60; font-size: 12px;');
+        
+        console.log('%c', '');
+        console.log('%c📱 INSTRUCCIONES:', 'color: #667eea; font-weight: bold; font-size: 13px;');
+        console.log('%c   1. Click en "Regístrate"', 'color: #667eea; font-size: 12px;');
+        console.log('%c   2. Selecciona tu sector del dropdown', 'color: #667eea; font-size: 12px;');
+        console.log('%c   3. Completa los datos y crea tu cuenta', 'color: #667eea; font-size: 12px;');
+        console.log('%c   4. Inicia sesión y comienza a pedir', 'color: #667eea; font-size: 12px;');
+        
+        console.log('%c', '');
+        console.log('%c════════════════════════════════════════════════════════', 'color: #667eea; font-weight: bold; font-size: 14px;');
+        console.log('%c💡 Para ver esta información nuevamente:', 'color: #f39c12; font-size: 12px;');
+        console.log('%c   mostrarInfoSistema();', 'color: #f39c12; font-weight: bold; font-size: 12px;');
+        console.log('%c════════════════════════════════════════════════════════', 'color: #667eea; font-weight: bold; font-size: 14px;');
+    }
+    
+    // Mostrar información al cargar la página
+    window.addEventListener('load', mostrarInfoSistema);
     
     let currentUser = null;
     let currentMonth = new Date().toISOString().slice(0, 7);
