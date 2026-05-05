@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Pedidos Mensual - Comedor</title>
+    <!-- Firebase desde CDN compatible -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+        
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+        
+        .login-card {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 450px;
+        }
+        
+        .login-card h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 28px;
+        }
+        
+        .login-card p {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 13px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            color: #34495e;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #bdc3c7;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .button {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .button:hover:not(:disabled) {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+        
+        .toggle-login {
+            text-align: center;
+            margin-top: 20px;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        .toggle-login button {
+            background: none;
+            border: none;
+            color: #667eea;
+            cursor: pointer;
+            text-decoration: underline;
+            font-weight: 600;
+        }
+        
+        .hidden { display: none !important; }
+        
+        .message {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            display: none;
+            font-size: 14px;
+        }
+        
+        .message.show { display: block; }
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: #2c3e50;
+            color: white;
+            padding: 25px;
+            overflow-y: auto;
+        }
+
+        .sidebar h2 {
+            font-size: 18px;
+            margin-bottom: 25px;
+        }
+
+        .nav-item {
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            background: transparent;
+            color: white;
+            border: none;
+            cursor: pointer;
+            text-align: left;
+            font-size: 14px;
+            width: 100%;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .nav-item:hover {
+            background: #34495e;
+        }
+
+        .nav-item.active {
+            background: #667eea;
+        }
+
+        .content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .page-title {
+            color: #2c3e50;
+            font-size: 28px;
+            margin-bottom: 25px;
+        }
+
+        .section {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .section h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="authContainer" class="login-container">
+    <div class="login-card">
+        <h1>Comedor Mensual</h1>
+        <p>Sistema de pedidos por mes</p>
+        
+        <div id="loginForm">
+            <div id="loginMessage"></div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="loginEmail" placeholder="tu@empresa.com">
+            </div>
+            <div class="form-group">
+                <label>Contraseña</label>
+                <input type="password" id="loginPassword" placeholder="••••••••">
+            </div>
+            <button class="button" onclick="handleLogin()">Ingresar</button>
+            <div class="toggle-login">
+                ¿No tienes cuenta? <button onclick="toggleAuthMode()">Regístrate</button>
+            </div>
+        </div>
+        
+        <div id="registerForm" class="hidden">
+            <div id="registerMessage"></div>
+            <div class="form-group">
+                <label>Nombre Empresa</label>
+                <input type="text" id="registerCompany" placeholder="Mi Empresa">
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="registerEmail" placeholder="contacto@empresa.com">
+            </div>
+            <div class="form-group">
+                <label>Teléfono</label>
+                <input type="tel" id="registerPhone" placeholder="+54 9 11 1234-5678">
+            </div>
+            <div class="form-group">
+                <label>Sector</label>
+                <select id="registerSector" style="width: 100%; padding: 12px; border: 1px solid #bdc3c7; border-radius: 6px; font-size: 14px;">
+                    <option value="">-- Selecciona tu sector --</option>
+                    <option value="Administración">Administración</option>
+                    <option value="Comercial">Comercial</option>
+                    <option value="Almacen">Almacen</option>
+                    <option value="Logistica">Logistica</option>
+                    <option value="Maestranza">Maestranza</option>
+                    <option value="IT">IT</option>
+                    <option value="Operaciones">Operaciones</option>
+                    <option value="INFO3">INFO3</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Dirección</label>
+                <input type="text" id="registerDireccion" placeholder="Calle y número">
+            </div>
+            <div class="form-group">
+                <label>Contraseña</label>
+                <input type="password" id="registerPassword" placeholder="••••••••">
+            </div>
+            <button class="button" onclick="handleRegister()">Crear Cuenta</button>
+            <div class="toggle-login">
+                ¿Ya tienes cuenta? <button onclick="toggleAuthMode()">Inicia sesión</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="appContainer" class="hidden app-container">
+    <div class="sidebar">
+        <h2>Comedor 📋</h2>
+        <button class="nav-item active" onclick="switchPage('dashboard')">📊 Dashboard</button>
+        <button class="nav-item" onclick="switchPage('monthlyOrder')">📅 Pedir el Mes</button>
+        <button class="nav-item" onclick="switchPage('myOrders')">📋 Mis Pedidos</button>
+        
+        <div id="adminNav" class="hidden" style="margin-top: 20px; border-top: 1px solid #34495e; padding-top: 20px;">
+            <button class="nav-item" onclick="switchPage('adminDashboard')">👨‍💼 Dashboard Admin</button>
+            <button class="nav-item" onclick="switchPage('allOrders')">📊 Todos Pedidos</button>
+        </div>
+        
+        <button class="button" onclick="logout()" style="margin-top: 30px; background: #e74c3c;">Cerrar Sesión</button>
+    </div>
+    
+    <div class="content">
+        <div id="messageBox"></div>
+        
+        <!-- Dashboard -->
+        <div id="dashboard" class="page active">
+            <h2 class="page-title">Mi Panel</h2>
+            <div class="section">
+                <h3>Bienvenido</h3>
+                <p id="welcomeText"></p>
+                <button class="button" onclick="switchPage('monthlyOrder')" style="margin-top: 20px; width: 200px;">Ir a Pedir el Mes</button>
+            </div>
+        </div>
+
+        <!-- Pedir el Mes -->
+        <div id="monthlyOrder" class="page">
+            <h2 class="page-title">Pedir el Mes</h2>
+            <div class="section">
+                <h3>Selecciona tu menú para el mes</h3>
+                <p>Esta funcionalidad está en desarrollo.</p>
+            </div>
+        </div>
+
+        <!-- Mis Pedidos -->
+        <div id="myOrders" class="page">
+            <h2 class="page-title">Mis Pedidos</h2>
+            <div class="section">
+                <h3>Tus pedidos confirmados</h3>
+                <p>Esta funcionalidad está en desarrollo.</p>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="adminDashboard" class="page">
+            <h2 class="page-title">Dashboard Admin</h2>
+            <div class="section">
+                <h3>Estadísticas</h3>
+                <p>Esta funcionalidad está en desarrollo.</p>
+            </div>
+        </div>
+
+        <!-- Todos los Pedidos -->
+        <div id="allOrders" class="page">
+            <h2 class="page-title">Todos los Pedidos</h2>
+            <div class="section">
+                <h3>Lista de pedidos</h3>
+                <p>Esta funcionalidad está en desarrollo.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ===== CONFIGURACIÓN FIREBASE =====
+    const firebaseConfig = {
+  apiKey: "AIzaSyCAxs_oJXpE-rpYRQDHk_6IAiG7Ni3MNxQ",
+  authDomain: "pedido-de-menus.firebaseapp.com",
+  databaseURL: "https://pedido-de-menus-default-rtdb.firebaseio.com",
+  projectId: "pedido-de-menus",
+  storageBucket: "pedido-de-menus.firebasestorage.app",
+  messagingSenderId: "488796537003",
+  appId: "1:488796537003:web:073f5b980b35f74476b7ee"
+};
+    
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const auth = firebase.auth();
+    
+    // ===== DATOS GLOBALES =====
+    const SECTORES = [
+        'Administración',
+        'Comercial', 
+        'Almacen', 
+        'Logistica', 
+        'Maestranza', 
+        'IT', 
+        'Operaciones', 
+        'INFO3'
+    ];
+    
+    let currentUser = null;
+    
+    console.log('%c🏢 SISTEMA DE PEDIDOS - INFORMACIÓN', 'font-size: 16px; font-weight: bold; color: #667eea;');
+    console.log('%c✅ Sectores disponibles:', 'color: #27ae60; font-weight: bold;', SECTORES);
+    
+    // ===== AUTENTICACIÓN =====
+    function handleLogin() {
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        
+        if (!email || !password) {
+            showAuthMessage('Completa todos los campos', 'error', 'login');
+            return;
+        }
+        
+        document.getElementById('loginBtn').disabled = true;
+        auth.signInWithEmailAndPassword(email, password)
+            .then(userCredential => {
+                currentUser = userCredential.user;
+                showApp();
+            })
+            .catch(error => {
+                showAuthMessage('Email o contraseña incorrectos', 'error', 'login');
+                document.getElementById('loginBtn').disabled = false;
+            });
+    }
+    
+    function handleRegister() {
+        const company = document.getElementById('registerCompany').value.trim();
+        const email = document.getElementById('registerEmail').value.trim();
+        const phone = document.getElementById('registerPhone').value.trim();
+        const sector = document.getElementById('registerSector').value;
+        const direccion = document.getElementById('registerDireccion').value.trim();
+        const password = document.getElementById('registerPassword').value;
+        
+        if (!company || !email || !phone || !sector || !direccion || !password) {
+            showAuthMessage('Completa todos los campos', 'error', 'register');
+            return;
+        }
+        
+        if (password.length < 6) {
+            showAuthMessage('La contraseña debe tener al menos 6 caracteres', 'error', 'register');
+            return;
+        }
+        
+        auth.createUserWithEmailAndPassword(email, password)
+            .then(userCredential => {
+                const uid = userCredential.user.uid;
+                db.ref('users/' + uid).set({
+                    email: email,
+                    company: company,
+                    phone: phone,
+                    sector: sector,
+                    direccion: direccion,
+                    role: 'client',
+                    createdAt: new Date().toISOString()
+                });
+                
+                showAuthMessage('¡Cuenta creada! Inicia sesión', 'success', 'register');
+                setTimeout(() => toggleAuthMode(), 2000);
+            })
+            .catch(error => {
+                showAuthMessage(error.message, 'error', 'register');
+            });
+    }
+    
+    function logout() {
+        auth.signOut().then(() => {
+            currentUser = null;
+            location.reload();
+        });
+    }
+    
+    function toggleAuthMode() {
+        document.getElementById('loginForm').classList.toggle('hidden');
+        document.getElementById('registerForm').classList.toggle('hidden');
+        inicializarFormularios();
+    }
+    
+    function showApp() {
+        document.getElementById('authContainer').classList.add('hidden');
+        document.getElementById('appContainer').classList.remove('hidden');
+        document.getElementById('welcomeText').textContent = `Bienvenido a ${currentUser.email}`;
+    }
+    
+    function switchPage(pageId) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        
+        document.getElementById(pageId).classList.add('active');
+        event.target.classList.add('active');
+    }
+    
+    function showAuthMessage(text, type, form) {
+        const msgEl = document.getElementById(form + 'Message');
+        if (msgEl) {
+            msgEl.innerHTML = `<div class="message ${type} show">${text}</div>`;
+            setTimeout(() => msgEl.innerHTML = '', 4000);
+        }
+    }
+    
+    function inicializarFormularios() {
+        console.log('%c✅ Formularios inicializados', 'color: #27ae60; font-weight: bold;');
+        console.log('%c📋 Sectores disponibles:', 'color: #667eea; font-weight: bold;', SECTORES);
+    }
+    
+    // Inicializar cuando la página carga
+    window.addEventListener('load', () => {
+        inicializarFormularios();
+        
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                currentUser = user;
+                showApp();
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
